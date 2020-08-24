@@ -40,26 +40,26 @@ int main()
   size_t cipherinputblen = 16+ciphertextblen;
   uint8_t *cipherinputb = (uint8_t *)malloc(cipherinputblen);
   memset(cipherinputb,0,cipherinputblen);
-  size_t pkeyblen = 32;
-  uint8_t *pkeyb = (uint8_t *)malloc(pkeyblen);
-  memset(pkeyb,0,pkeyblen);
+  size_t wkeyblen = 32;
+  uint8_t *wkeyb = (uint8_t *)malloc(wkeyblen);
+  memset(wkeyb,0,wkeyblen);
 
-  //derive pkey
+  //derive wkey
   Botan::scrypt(
-    pkeyb, pkeyblen,
+    wkeyb, wkeyblen,
     passc, strlen(passc),
     saltb, saltblen,
     kdf_n, kdf_r, kdf_p);
 
-  printPad("pkey:");
-  printBytes(pkeyb,pkeyblen);
+  printPad("wkey:");
+  printBytes(wkeyb,wkeyblen);
 
   printPad("ciphertext:");
   for(size_t i = 0; i < 64; i++) printf(" "); //to align w/ cipherinput
   printHexNormalized(ciphertexth);
 
   //concatenate
-  memcpy(cipherinputb,    pkeyb+16,    16);
+  memcpy(cipherinputb,    wkeyb+16,    16);
   memcpy(cipherinputb+16, ciphertextb, ciphertextblen);
   printPad("cipher input:");
   for(size_t i = 0; i < 32; i++) printf(" "); //to align w/ cipherinput
