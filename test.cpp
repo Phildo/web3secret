@@ -10,7 +10,7 @@
 
 int main()
 {
-  /*
+  //*
   //thisisatestwallet.json
   const char *ciphertexth = "c6d18f78af6e5e7cea4ab804d8b9a5f974ccf92ea2537416b90abebd77c6b580";
   const char *salth = "d77fe79c1162d34e85994a338e815d3904c171c67cc3f72d4b433aa19dbc7bb1";
@@ -19,9 +19,9 @@ int main()
   size_t kdf_n = 262144;
   size_t kdf_r = 8;
   size_t kdf_p = 1;
-  */
+  //*/
 
-  //*
+  /*
   //web3 test wallet
   const char *ciphertexth = "d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c";
   const char *salth = "ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19";
@@ -30,6 +30,7 @@ int main()
   size_t kdf_n = 262144;
   size_t kdf_r = 1;
   size_t kdf_p = 8;
+  //*/
 
   //alloc/populate
   uint8_t *saltb = hexs2bytes(salth,strlen(salth));
