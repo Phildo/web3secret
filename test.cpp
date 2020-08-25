@@ -3,9 +3,11 @@
 #include <cstdlib>
 #include <cassert>
 #include <vector>
+#include <botan/auto_rng.h>
 #include <botan/scrypt.h>
 #include <botan/keccak.h>
 #include <botan/cipher_mode.h>
+#include <botan/p11_ecdsa.h>
 
 #include "util.h"
 
@@ -51,6 +53,9 @@ int main()
   uint8_t *wkeyb = (uint8_t *)malloc(wkeyblen);
   memset(wkeyb,0,wkeyblen);
 
+  Botan::Keccak_1600 keccak = Botan::Keccak_1600(256);
+  Botan::AutoSeeded_RNG rng{};
+
   //derive wkey
   Botan::scrypt(
     wkeyb, wkeyblen,
@@ -73,23 +78,41 @@ int main()
   printBytes(cipherinputb,cipherinputblen);
 
   //hash
-  Botan::Keccak_1600 keccak = Botan::Keccak_1600(256);
-  Botan::secure_vector<uint8_t> keccak_out = keccak.process(cipherinputb,cipherinputblen);
+  keccak.clear();
+  Botan::secure_vector<uint8_t> macb = keccak.process(cipherinputb,cipherinputblen);
   printPad("keccak out:");
-  printBytes(keccak_out.data(),keccak_out.size());
+  printBytes(macb.data(),macb.size());
 
-  printPad("mac:");
+  //should match mac
+  printPad("mac (matches ^):");
   printHexNormalized(mach);
 
+  //decrypt private key
   std::unique_ptr<Botan::Cipher_Mode> enc = Botan::Cipher_Mode::create("AES-128/CTR", Botan::ENCRYPTION);
   enc->set_key(wkeyb,16);
   enc->start(ivb,ivblen);
   Botan::secure_vector<uint8_t> cipherresultb(ciphertextblen);
   cipherresultb.assign(ciphertextb,ciphertextb+ciphertextblen);
   enc->finish(cipherresultb);
-
   printPad("pkey:");
   printBytes(cipherresultb.data(),cipherresultb.size());
+
+  //generate public key
+
+  Botan::BigInt pkeyint = Botan::BigInt(cipherresultb);
+  Botan::ECDSA_PrivateKey pkey = Botan::ECDSA_PrivateKey(rng,Botan::EC_Group("secp256k1"),pkeyint);
+  printPad("pubkey:");
+  std::vector<uint8_t> pubkeyb = pkey.public_key_bits();
+  pubkeyb.erase(pubkeyb.begin(),pubkeyb.begin()+1); //quirk of botan pub keygen?
+  printBytes(pubkeyb.data(),pubkeyb.size());
+
+  //generate address
+  keccak.clear();
+  Botan::secure_vector<uint8_t> addr = keccak.process(pubkeyb.data(),pubkeyb.size());
+  printPad("keccak out:");
+  printBytes(addr.data(),addr.size());
+  printPad("address:");
+  printBytes(addr.data()+addr.size()-20,20);
 
   free(wkeyb);
   free(cipherinputb);
