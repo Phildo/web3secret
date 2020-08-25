@@ -1,3 +1,4 @@
 build
+donotcommit.h
 *.vscode
 *.dll
